@@ -57,6 +57,15 @@ struct CompendiumIndexState: NavigationStackSourceState, Equatable {
         }
     }
 
+    var detailItemDetailViewState: CompendiumEntryDetailViewState? {
+        get { detailScreen?.navigationStackItemState as? CompendiumEntryDetailViewState }
+        set {
+            if let newValue = newValue {
+                detailScreen = .itemDetail(newValue)
+            }
+        }
+    }
+
     var nextGroupEditViewState: CompendiumItemGroupEditState? {
         get { nextScreen?.navigationStackItemState as? CompendiumItemGroupEditState }
         set {
@@ -202,6 +211,7 @@ struct CompendiumIndexState: NavigationStackSourceState, Equatable {
     static var reducer: Reducer<Self, CompendiumIndexAction, Environment> {
         return Reducer.combine(
             CompendiumEntryDetailViewState.reducer.optional().pullback(state: \.nextItemDetailViewState, action: /CompendiumIndexAction.nextScreen..CompendiumIndexAction.NextScreenAction.compendiumEntry),
+            CompendiumEntryDetailViewState.reducer.optional().pullback(state: \.detailItemDetailViewState, action: /CompendiumIndexAction.detailScreen..CompendiumIndexAction.NextScreenAction.compendiumEntry),
             Reducer { state, action, env in
                 switch action {
                 case .results: break
@@ -306,18 +316,18 @@ enum CompendiumIndexAction: NavigationStackSourceAction, Equatable {
     indirect case detailScreen(NextScreenAction)
 
     static func presentScreen(_ destination: NavigationDestination, _ screen: CompendiumIndexState.NextScreen?) -> Self {
-            switch destination {
-            case .nextInStack: return .setNextScreen(screen)
-            case .detail: return .setDetailScreen(screen)
-            }
+        switch destination {
+        case .nextInStack: return .setNextScreen(screen)
+        case .detail: return .setDetailScreen(screen)
         }
+    }
 
-        static func presentedScreen(_ destination: NavigationDestination, _ action: NextScreenAction) -> Self {
-            switch destination {
-            case .nextInStack: return .nextScreen(action)
-            case .detail: return .detailScreen(action)
-            }
+    static func presentedScreen(_ destination: NavigationDestination, _ action: NextScreenAction) -> Self {
+        switch destination {
+        case .nextInStack: return .nextScreen(action)
+        case .detail: return .detailScreen(action)
         }
+    }
 
     enum NextScreenAction: Equatable {
         case compendiumIndex(CompendiumIndexAction)
